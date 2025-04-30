@@ -74,11 +74,13 @@ Follow these steps to upload this project to your GitHub repository:
 
 Your project should now be available at https://github.com/ahmadhussain64/kidscodequest
 
-## Part 2: Streamlit.io Deployment
+## Part 2: Deployment Options
+
+### Option A: Streamlit.io Deployment
 
 Follow these steps to deploy your application on Streamlit.io (Streamlit Community Cloud):
 
-### Preparation Steps
+#### Preparation Steps
 
 1. Make sure your GitHub repository includes these important files:
    - `app.py` - Main application file
