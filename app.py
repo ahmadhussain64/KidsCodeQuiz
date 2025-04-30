@@ -9,6 +9,7 @@ from user_management import create_user, login_user
 from code_executor import execute_python_code
 from database_manager import DatabaseManager, migrate_from_json_if_needed
 from certificate_generator import display_certificate_page, verify_certificate_page
+from gemini_helper import display_chatbot
 
 # Create a database manager instance
 db_manager = DatabaseManager()
@@ -444,58 +445,7 @@ elif st.session_state.current_page == "admin_dashboard":
 # Add a chatbot to welcome page
 if st.session_state.current_page == "welcome":
     st.markdown("---")
-    st.subheader("Got Questions? Ask Our AI Assistant! 🤖")
-    
-    # Simple chat interface
-    message = st.text_input("Ask a question about Python or programming:", key="ai_question")
-    
-    if st.button("Ask") and message:
-        # Display thinking message
-        with st.spinner("Thinking..."):
-            # In a real implementation, you would call the Google Gemini API here
-            # For now, we'll simulate a response
-            
-            # Create a placeholder for AI response
-            persona = "YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"
-            response = f"As a Python education specialist, I'm here to help! Your question was: '{message}'\n\n"
-            response += "To properly implement this feature, you'll need to add Google Gemini API integration. "
-            response += "When implemented, you'll be able to ask Python questions and get detailed answers."
-            
-            # Add to chat history
-            st.session_state.chat_history.append({"user": message, "bot": response})
-        
-    # Display chat history
-    if st.session_state.chat_history:
-        st.subheader("Conversation")
-        for chat in st.session_state.chat_history:
-            st.markdown(f"**You:** {chat['user']}")
-            st.markdown(f"**AI Assistant:** {chat['bot']}")
-            st.markdown("---")
-            
-    # Instructions for implementing Google Gemini
-    with st.expander("How to Implement Google Gemini Integration"):
-        st.markdown("""
-        To implement the Google Gemini AI integration:
-        
-        1. Sign up for Google AI Studio to get an API key
-        2. Install the Google Generative AI library: `pip install google-generativeai`
-        3. Replace the placeholder response with actual API calls:
-        
-        ```python
-        import google.generativeai as genai
-        
-        # Configure with your API key
-        genai.configure(api_key="YOUR_API_KEY")
-        
-        # Set up the model
-        model = genai.GenerativeModel('gemini-pro')
-        
-        # Add the education specialist persona
-        prompt = f"{persona}\\n\\nQuestion: {message}"
-        
-        # Generate response
-        response = model.generate_content(prompt).text
-        ```
-        
-        Please obtain a Google Gemini API key to activate this feature.
-        """)
+    # Create a container for the chatbot
+    chat_container = st.container()
+    # Display the chatbot in the container
+    display_chatbot(chat_container)
