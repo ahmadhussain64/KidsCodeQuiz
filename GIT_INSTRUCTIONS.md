@@ -48,7 +48,7 @@ Follow these steps to upload this project to your GitHub repository:
 
 6. Add the GitHub repository as a remote and push:
    ```
-   git remote add origin https://github.com/bilalpiaic/kidscodequest.git
+   git remote add origin https://github.com/ahmadhussain64/kidscodequiz.git
    git branch -M main
    git push -u origin main
    ```
@@ -72,7 +72,7 @@ Follow these steps to upload this project to your GitHub repository:
    - Choose public or private
    - Click "Publish Repository"
 
-Your project should now be available at https://github.com/ahmadhussain64/kidscodequest
+Your project should now be available at https://github.com/ahmadhussain64/kidscodequiz
 
 ## Part 2: Deployment Options
 
@@ -116,7 +116,7 @@ Follow these steps to deploy your application on Streamlit.io (Streamlit Communi
 
 4. Wait for the deployment to complete
 
-5. Your app will be available at a URL like: `https://kidscodequest-[random-string].streamlit.app`
+5. Your app will be available at a URL like: `https://kidscodequiz-[random-string].streamlit.app`
 
 #### Important Notes for Streamlit Deployment
 
