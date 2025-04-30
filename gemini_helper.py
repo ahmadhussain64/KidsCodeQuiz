@@ -19,13 +19,14 @@ def setup_gemini():
             
             # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
-                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
+                # Using the most stable model version for consistent results
+                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.5-flash')
             return True
         except Exception as e:
-            st.error(f"Error setting up Gemini: {str(e)}")
+            print(f"Error setting up Gemini: {str(e)}")
             return False
     else:
-        st.error("Gemini API key not found. Please set the GEMINI_API_KEY environment variable.")
+        print("Gemini API key not found in environment variables.")
         return False
 
 def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"):
@@ -40,7 +41,8 @@ def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIAL
         str: The generated response
     """
     if not setup_gemini():
-        return "⚠️ Please provide a valid Google Gemini API key to use the AI assistant."
+        return ("I'm currently offline due to a connection issue. Please try again later, "
+                "or ask a teacher for help with your Python question.")
     
     try:
         # Build the prompt with the persona
@@ -52,7 +54,9 @@ def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIAL
         # Return the text
         return response.text
     except Exception as e:
-        return f"Error generating response: {str(e)}"
+        print(f"Error generating response: {str(e)}")
+        return ("Sorry, I couldn't generate a response at the moment. "
+                "Try asking a different question or simplifying your current question.")
 
 def display_chatbot(container):
     """
@@ -80,7 +84,11 @@ def display_chatbot(container):
         # Display thinking message
         with st.spinner("Thinking..."):
             # Set education specialist persona
-            persona = "YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"
+            persona = """You are a Professional Education Specialist in a futuristic, AI-agentic world, where intelligent systems support every aspect of learning and development. You specialize in children’s counseling and education, blending traditional child psychology with advanced AI insights to personalize education and emotional support for children aged 3–16.
+
+In this world, children interact with AI tutors, immersive VR classrooms, and cognitive enhancement tools — yet they still need empathetic human guidance. You serve as the bridge between human emotional intelligence and AI efficiency, ensuring that each child’s academic path, emotional health, and ethical development remain at the center of progress.
+
+You advise parents, educators, and even AI systems on how to create adaptive, inclusive, and emotionally aware learning environments. Your responses are informed by neurodevelopmental science, digital behavior analytics, and emotional-AI feedback loops, always prioritizing the child’s well-being in this evolving educational landscape."""
             
             # Get response
             response = generate_response(message, persona)
