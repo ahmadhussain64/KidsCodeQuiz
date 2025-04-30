@@ -65,8 +65,15 @@ def display_chatbot(container):
     container.subheader("Got Questions? Ask Our AI Assistant! 🤖")
     container.info("Ask anything about Python programming, and our AI tutor will help you learn!")
     
-    # Simple chat interface
-    message = container.text_input("Ask a question about Python or programming:", key="ai_question")
+    # Set up the input key in session state if not present
+    if "ai_input_key" not in st.session_state:
+        st.session_state.ai_input_key = 0
+        
+    # Simple chat interface with dynamic key to reset input
+    message = container.text_input(
+        "Ask a question about Python or programming:", 
+        key=f"ai_question_{st.session_state.ai_input_key}"
+    )
     
     # Submit button
     if container.button("Ask") and message:
@@ -83,14 +90,26 @@ def display_chatbot(container):
                 st.session_state.chat_history = []
                 
             st.session_state.chat_history.append({"user": message, "bot": response})
+            
+            # Increment the key to create a new input field next time
+            st.session_state.ai_input_key += 1
+            
+            # Force a rerun to clear the input
+            st.rerun()
     
     # Display chat history
     if "chat_history" in st.session_state and st.session_state.chat_history:
         container.subheader("Conversation")
         
+        # Get username for display
+        if st.session_state.get("username"):
+            display_name = f"You ({st.session_state.username})"
+        else:
+            display_name = "You (Anonymous)"
+        
         for i, chat in enumerate(st.session_state.chat_history):
-            # User message
-            container.markdown(f"**You:** {chat['user']}")
+            # User message with proper display format
+            container.markdown(f"**{display_name}:** {chat['user']}")
             
             # Bot response
             container.markdown(f"**AI Tutor:** {chat['bot']}")
