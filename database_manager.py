@@ -39,6 +39,7 @@ class DatabaseManager:
             class TEXT,
             section TEXT,
             school TEXT,
+            is_admin INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_login TIMESTAMP
         )
@@ -87,7 +88,7 @@ class DatabaseManager:
         self.disconnect(conn)
         
     # User management functions
-    def add_user(self, username, password_hash, profile_data=None):
+    def add_user(self, username, password_hash, profile_data=None, is_admin=False):
         """
         Add a new user to the database
         
@@ -95,6 +96,7 @@ class DatabaseManager:
             username (str): User's chosen username
             password_hash (str): Hashed password
             profile_data (dict, optional): Dictionary containing user profile information
+            is_admin (bool): Whether the user is an administrator
         """
         conn, cursor = self.connect()
         try:
@@ -103,8 +105,8 @@ class DatabaseManager:
                     """
                     INSERT INTO users (
                         username, password_hash, full_name, parent_name, 
-                        dob, class, section, school
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        dob, class, section, school, is_admin
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         username, password_hash, 
@@ -113,13 +115,14 @@ class DatabaseManager:
                         profile_data.get('dob', ''),
                         profile_data.get('class', ''),
                         profile_data.get('section', ''),
-                        profile_data.get('school', '')
+                        profile_data.get('school', ''),
+                        1 if is_admin else 0
                     )
                 )
             else:
                 cursor.execute(
-                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                    (username, password_hash)
+                    "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
+                    (username, password_hash, 1 if is_admin else 0)
                 )
             
             user_id = cursor.lastrowid
@@ -148,7 +151,7 @@ class DatabaseManager:
             cursor.execute(
                 """
                 SELECT id, username, password_hash, full_name, parent_name, 
-                dob, class, section, school
+                dob, class, section, school, is_admin
                 FROM users WHERE username = ?
                 """,
                 (username,)
@@ -164,7 +167,8 @@ class DatabaseManager:
                     "dob": user[5],
                     "class": user[6],
                     "section": user[7],
-                    "school": user[8]
+                    "school": user[8],
+                    "is_admin": bool(user[9])
                 }
             return None
         finally:
@@ -411,6 +415,134 @@ class DatabaseManager:
                     "is_valid": True
                 }
             return {"is_valid": False}
+        finally:
+            self.disconnect(conn)
+            
+    # Admin specific functions
+    def get_all_users(self):
+        """Get all users from the database - for admin use"""
+        conn, cursor = self.connect()
+        try:
+            cursor.execute(
+                """
+                SELECT id, username, full_name, parent_name, dob, class, section, 
+                       school, is_admin, created_at, last_login
+                FROM users
+                ORDER BY created_at DESC
+                """
+            )
+            users = cursor.fetchall()
+            return [
+                {
+                    "id": user[0],
+                    "username": user[1],
+                    "full_name": user[2],
+                    "parent_name": user[3],
+                    "dob": user[4],
+                    "class": user[5],
+                    "section": user[6],
+                    "school": user[7],
+                    "is_admin": bool(user[8]),
+                    "created_at": user[9],
+                    "last_login": user[10]
+                }
+                for user in users
+            ]
+        finally:
+            self.disconnect(conn)
+            
+    def update_user_profile(self, user_id, profile_data):
+        """Update a user's profile information - for admin use"""
+        conn, cursor = self.connect()
+        try:
+            cursor.execute(
+                """
+                UPDATE users
+                SET full_name = ?, parent_name = ?, dob = ?, 
+                    class = ?, section = ?, school = ?
+                WHERE id = ?
+                """,
+                (
+                    profile_data.get('full_name', ''),
+                    profile_data.get('parent_name', ''),
+                    profile_data.get('dob', ''),
+                    profile_data.get('class', ''),
+                    profile_data.get('section', ''),
+                    profile_data.get('school', ''),
+                    user_id
+                )
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating user profile: {str(e)}")
+            return False
+        finally:
+            self.disconnect(conn)
+            
+    def set_admin_status(self, user_id, is_admin):
+        """Set or remove admin status for a user - for admin use"""
+        conn, cursor = self.connect()
+        try:
+            cursor.execute(
+                "UPDATE users SET is_admin = ? WHERE id = ?",
+                (1 if is_admin else 0, user_id)
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error setting admin status: {str(e)}")
+            return False
+        finally:
+            self.disconnect(conn)
+            
+    def get_user_by_id(self, user_id):
+        """Get user details by ID - for admin use"""
+        conn, cursor = self.connect()
+        try:
+            cursor.execute(
+                """
+                SELECT id, username, full_name, parent_name, dob, class, 
+                       section, school, is_admin, created_at, last_login
+                FROM users WHERE id = ?
+                """,
+                (user_id,)
+            )
+            user = cursor.fetchone()
+            if user:
+                return {
+                    "id": user[0],
+                    "username": user[1],
+                    "full_name": user[2],
+                    "parent_name": user[3],
+                    "dob": user[4],
+                    "class": user[5],
+                    "section": user[6],
+                    "school": user[7],
+                    "is_admin": bool(user[8]),
+                    "created_at": user[9],
+                    "last_login": user[10]
+                }
+            return None
+        finally:
+            self.disconnect(conn)
+            
+    def reset_user_password(self, user_id, new_password_hash):
+        """Reset a user's password - for admin use"""
+        conn, cursor = self.connect()
+        try:
+            cursor.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (new_password_hash, user_id)
+            )
+            conn.commit()
+            
+            # Log the password reset event
+            self.log_event(user_id, "password_reset", "Password was reset by administrator")
+            return True
+        except Exception as e:
+            print(f"Error resetting password: {str(e)}")
+            return False
         finally:
             self.disconnect(conn)
             
