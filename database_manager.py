@@ -474,3 +474,30 @@ def migrate_from_json_if_needed():
             db_manager.disconnect(conn)
     except Exception as e:
         print(f"Error migrating data: {str(e)}")
+def inspect_database(self):
+    """Print database tables and their contents"""
+    conn, cursor = self.connect()
+    try:
+        # Get all tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        
+        info = {}
+        for table in tables:
+            table_name = table[0]
+            # Get table schema
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns = cursor.fetchall()
+            
+            # Get table contents
+            cursor.execute(f"SELECT * FROM {table_name} LIMIT 5;")
+            sample_data = cursor.fetchall()
+            
+            info[table_name] = {
+                'columns': [col[1] for col in columns],
+                'sample_data': sample_data
+            }
+            
+        return info
+    finally:
+        self.disconnect(conn)

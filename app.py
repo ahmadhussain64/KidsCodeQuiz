@@ -151,6 +151,13 @@ if st.session_state.username:
     st.sidebar.button("My Certificates 🏆", on_click=go_to_page, args=("certificates",))
 
 # Certificate verification (available to all)
+# Admin section
+if st.session_state.username:
+    st.sidebar.markdown("## Database Admin")
+    if st.sidebar.button("Inspect Database"):
+        db_info = db_manager.inspect_database()
+        st.sidebar.json(db_info)
+
 st.sidebar.markdown("## Certificate Verification")
 st.sidebar.button("Verify a Certificate 🔍", on_click=go_to_page, args=("verify_certificate",))
 
