@@ -133,6 +133,7 @@ def login_user():
         # Set session state
         st.session_state.username = username
         st.session_state.user_id = user["id"]
+        st.session_state.is_admin = user.get("is_admin", False)
 
         # Set user profile in session state
         st.session_state.profile = {

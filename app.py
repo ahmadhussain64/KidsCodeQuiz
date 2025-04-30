@@ -29,6 +29,8 @@ if 'username' not in st.session_state:
     st.session_state.username = None
 if 'user_id' not in st.session_state:
     st.session_state.user_id = None
+if 'is_admin' not in st.session_state:
+    st.session_state.is_admin = False
 if 'current_page' not in st.session_state:
     st.session_state.current_page = "welcome"
 if 'tutorial_index' not in st.session_state:
@@ -43,6 +45,10 @@ if 'completed_challenges' not in st.session_state:
     st.session_state.completed_challenges = []
 if 'emoji_collection' not in st.session_state:
     st.session_state.emoji_collection = []
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+if 'selected_user_id' not in st.session_state:
+    st.session_state.selected_user_id = None
 
 # Store tutorials and challenges data in session state for certificate requirements
 st.session_state.all_tutorials = tutorials_data
@@ -152,11 +158,9 @@ if st.session_state.username:
 
 # Certificate verification (available to all)
 # Admin section
-if st.session_state.username:
-    st.sidebar.markdown("## Database Admin")
-    if st.sidebar.button("Inspect Database"):
-        db_info = db_manager.inspect_database()
-        st.sidebar.json(db_info)
+if st.session_state.username and st.session_state.is_admin:
+    st.sidebar.markdown("## Admin Panel 🔧")
+    st.sidebar.button("Admin Dashboard 👑", on_click=go_to_page, args=("admin_dashboard",))
 
 st.sidebar.markdown("## Certificate Verification")
 st.sidebar.button("Verify a Certificate 🔍", on_click=go_to_page, args=("verify_certificate",))
@@ -226,3 +230,272 @@ elif st.session_state.current_page == "certificates":
 
 elif st.session_state.current_page == "verify_certificate":
     verify_certificate_page()
+
+elif st.session_state.current_page == "admin_dashboard":
+    if st.session_state.username and st.session_state.is_admin:
+        st.title("Admin Dashboard 👑")
+        
+        admin_tabs = st.tabs(["User Management", "Progress Tracking", "Statistics"])
+        
+        with admin_tabs[0]:
+            st.subheader("User Management")
+            
+            # Get all users from database
+            all_users = db_manager.get_all_users()
+            
+            # Display user table
+            if all_users:
+                user_df = pd.DataFrame([
+                    {
+                        "ID": user["id"],
+                        "Username": user["username"],
+                        "Full Name": user["full_name"],
+                        "School": user["school"],
+                        "Class": user["class"],
+                        "Admin": "✓" if user["is_admin"] else "",
+                        "Last Login": user["last_login"]
+                    } for user in all_users
+                ])
+                
+                st.dataframe(user_df, use_container_width=True)
+                
+                # User selection for details and editing
+                st.subheader("Edit User")
+                user_id = st.selectbox("Select User", 
+                                      options=[user["id"] for user in all_users],
+                                      format_func=lambda x: next((u["username"] for u in all_users if u["id"] == x), "Unknown"))
+                
+                if user_id:
+                    st.session_state.selected_user_id = user_id
+                    user_details = db_manager.get_user_by_id(user_id)
+                    
+                    if user_details:
+                        # User profile editing
+                        with st.form("edit_user_form"):
+                            st.subheader(f"Edit User: {user_details['username']}")
+                            
+                            full_name = st.text_input("Full Name", value=user_details["full_name"] or "")
+                            parent_name = st.text_input("Parent Name", value=user_details["parent_name"] or "")
+                            dob = st.text_input("Date of Birth", value=user_details["dob"] or "")
+                            class_name = st.text_input("Class", value=user_details["class"] or "")
+                            section = st.text_input("Section", value=user_details["section"] or "")
+                            school = st.text_input("School", value=user_details["school"] or "")
+                            
+                            is_admin = st.checkbox("Administrator", value=user_details["is_admin"])
+                            
+                            reset_password = st.checkbox("Reset Password")
+                            new_password = ""
+                            if reset_password:
+                                new_password = st.text_input("New Password", type="password")
+                                
+                            submitted = st.form_submit_button("Save Changes")
+                            
+                            if submitted:
+                                # Update profile
+                                profile_data = {
+                                    'full_name': full_name,
+                                    'parent_name': parent_name,
+                                    'dob': dob,
+                                    'class': class_name,
+                                    'section': section,
+                                    'school': school
+                                }
+                                
+                                db_manager.update_user_profile(user_id, profile_data)
+                                
+                                # Update admin status if it changed
+                                if is_admin != user_details["is_admin"]:
+                                    db_manager.set_admin_status(user_id, is_admin)
+                                
+                                # Reset password if requested
+                                if reset_password and new_password:
+                                    from user_management import hash_password
+                                    new_password_hash = hash_password(new_password)
+                                    db_manager.reset_user_password(user_id, new_password_hash)
+                                
+                                st.success("User updated successfully!")
+                                st.rerun()
+                        
+                        # View user progress
+                        st.subheader("User Progress")
+                        progress = db_manager.get_user_progress(user_id)
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Points", progress.get("points", 0))
+                        with col2:
+                            st.metric("Completed Tutorials", len(progress.get("completed_tutorials", [])))
+                        with col3:
+                            st.metric("Completed Challenges", len(progress.get("completed_challenges", [])))
+                        
+                        # View user recent events
+                        st.subheader("Recent Activity")
+                        events = db_manager.get_user_events(user_id, limit=10)
+                        
+                        if events:
+                            events_df = pd.DataFrame([
+                                {
+                                    "Time": event["timestamp"],
+                                    "Event": event["event_type"],
+                                    "Details": event["event_details"]
+                                } for event in events
+                            ])
+                            st.dataframe(events_df, use_container_width=True)
+                        else:
+                            st.info("No recent activity")
+            else:
+                st.info("No users found in the database")
+                
+        with admin_tabs[1]:
+            st.subheader("Progress Tracking")
+            
+            # Display progress statistics
+            all_users = db_manager.get_all_users()
+            
+            if all_users:
+                progress_data = []
+                for user in all_users:
+                    progress = db_manager.get_user_progress(user["id"])
+                    progress_data.append({
+                        "Username": user["username"],
+                        "Points": progress.get("points", 0),
+                        "Tutorials Completed": len(progress.get("completed_tutorials", [])),
+                        "Challenges Completed": len(progress.get("completed_challenges", [])),
+                        "Emojis Collected": len(progress.get("emoji_collection", []))
+                    })
+                
+                progress_df = pd.DataFrame(progress_data)
+                st.dataframe(progress_df, use_container_width=True)
+                
+                # Visualization
+                st.subheader("Visualizations")
+                
+                # Points Bar Chart
+                st.bar_chart(progress_df.set_index("Username")["Points"])
+                
+                # Tutorials vs Challenges
+                st.subheader("Tutorials vs Challenges Completion")
+                tc_data = progress_df[["Username", "Tutorials Completed", "Challenges Completed"]]
+                st.line_chart(tc_data.set_index("Username"))
+            else:
+                st.info("No users found in the database")
+                
+        with admin_tabs[2]:
+            st.subheader("System Statistics")
+            
+            # Get various statistics from the database
+            conn, cursor = db_manager.connect()
+            try:
+                cursor.execute("SELECT COUNT(*) FROM users")
+                total_users = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM certificates")
+                total_certificates = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM user_events")
+                total_events = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT SUM(points) FROM user_progress")
+                total_points = cursor.fetchone()[0] or 0
+                
+                cursor.execute("SELECT COUNT(*) FROM users WHERE last_login > datetime('now', '-7 day')")
+                active_users = cursor.fetchone()[0]
+                
+                # Display statistics
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Users", total_users)
+                    st.metric("Active Users (7d)", active_users)
+                
+                with col2:
+                    st.metric("Total Certificates", total_certificates)
+                    st.metric("Total Points Earned", total_points)
+                
+                with col3:
+                    st.metric("Total Events", total_events)
+                    
+                # Get most recent events
+                cursor.execute("""
+                SELECT e.timestamp, e.event_type, e.event_details, u.username
+                FROM user_events e
+                JOIN users u ON e.user_id = u.id
+                ORDER BY e.timestamp DESC
+                LIMIT 20
+                """)
+                recent_events = cursor.fetchall()
+                
+                st.subheader("Recent System Events")
+                if recent_events:
+                    events_df = pd.DataFrame([
+                        {
+                            "Time": event[0],
+                            "User": event[3],
+                            "Event": event[1],
+                            "Details": event[2]
+                        } for event in recent_events
+                    ])
+                    st.dataframe(events_df, use_container_width=True)
+            finally:
+                db_manager.disconnect(conn)
+    else:
+        st.error("You don't have permission to access the admin dashboard")
+        st.button("Go Back to Home", on_click=go_to_page, args=("welcome",))
+
+# Add a chatbot to welcome page
+if st.session_state.current_page == "welcome":
+    st.markdown("---")
+    st.subheader("Got Questions? Ask Our AI Assistant! 🤖")
+    
+    # Simple chat interface
+    message = st.text_input("Ask a question about Python or programming:", key="ai_question")
+    
+    if st.button("Ask") and message:
+        # Display thinking message
+        with st.spinner("Thinking..."):
+            # In a real implementation, you would call the Google Gemini API here
+            # For now, we'll simulate a response
+            
+            # Create a placeholder for AI response
+            persona = "YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"
+            response = f"As a Python education specialist, I'm here to help! Your question was: '{message}'\n\n"
+            response += "To properly implement this feature, you'll need to add Google Gemini API integration. "
+            response += "When implemented, you'll be able to ask Python questions and get detailed answers."
+            
+            # Add to chat history
+            st.session_state.chat_history.append({"user": message, "bot": response})
+        
+    # Display chat history
+    if st.session_state.chat_history:
+        st.subheader("Conversation")
+        for chat in st.session_state.chat_history:
+            st.markdown(f"**You:** {chat['user']}")
+            st.markdown(f"**AI Assistant:** {chat['bot']}")
+            st.markdown("---")
+            
+    # Instructions for implementing Google Gemini
+    with st.expander("How to Implement Google Gemini Integration"):
+        st.markdown("""
+        To implement the Google Gemini AI integration:
+        
+        1. Sign up for Google AI Studio to get an API key
+        2. Install the Google Generative AI library: `pip install google-generativeai`
+        3. Replace the placeholder response with actual API calls:
+        
+        ```python
+        import google.generativeai as genai
+        
+        # Configure with your API key
+        genai.configure(api_key="YOUR_API_KEY")
+        
+        # Set up the model
+        model = genai.GenerativeModel('gemini-pro')
+        
+        # Add the education specialist persona
+        prompt = f"{persona}\\n\\nQuestion: {message}"
+        
+        # Generate response
+        response = model.generate_content(prompt).text
+        ```
+        
+        Please obtain a Google Gemini API key to activate this feature.
+        """)
