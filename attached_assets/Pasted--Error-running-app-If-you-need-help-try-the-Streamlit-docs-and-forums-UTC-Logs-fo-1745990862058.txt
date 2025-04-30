@@ -1,0 +1,117 @@
+
+Error running app. If you need help, try the Streamlit docs and forums.
+
+[     UTC     ] Logs for kidscodequest.streamlit.app/
+
+────────────────────────────────────────────────────────────────────────────────────────
+
+[05:24:30] 🖥 Provisioning machine...
+
+[05:24:35] 🎛 Preparing system...
+
+[05:25:10] ⛓ Spinning up manager process...
+
+[05:24:37] 🚀 Starting up repository: 'kidscodequest', branch: 'main', main module: 'app.py'
+
+[05:24:37] 🐙 Cloning repository...
+
+[05:24:37] 🐙 Cloning into '/mount/src/kidscodequest'...
+
+[05:24:37] 🐙 Cloned repository!
+
+[05:24:37] 🐙 Pulling code changes from Github...
+
+[05:24:38] 📦 Processing dependencies...
+
+Prepared 37 packages in 2.14s
+
+Installed 37 packages in 125ms
+
+ + altair==5.5.0
+
+ + attrs==25.3.0
+
+ + blinker==1.9.0
+
+ + cachetools==5.5.2
+
+ + certifi==2025.4.26
+
+ + charset-normalizer==3.4.1
+
+ + click==8.1.8
+
+ + gitdb==4.0.12
+
+ + gitpython==[2025-04-30 05:24:40.821859] 3.1.44
+
+ + idna==3.10
+
+ + jinja2==3.1.6
+
+ + jsonschema==4.23.0
+
+ + jsonschema-specifications==2025.4.1
+
+ [2025-04-30 05:24:40.822120] + markupsafe==3.0.2
+
+ + narwhals==1.36.0
+
+ + numpy==2.2.5
+
+ + packaging==24.2
+
+ + [2025-04-30 05:24:40.822313] pandas==2.2.3
+
+ + pillow==11.2.1
+
+ + protobuf==5.29.4
+
+ + pyarrow==19.0.1
+
+ + pydeck==0.9.1
+
+ + python-dateutil==2.9.0.post0
+
+ + pytz==2025.2[2025-04-30 05:24:40.822495] 
+
+ + referencing==0.36.2
+
+ + requests==2.32.3
+
+ + rpds-py==0.24.0
+
+ + six==1.17.0
+
+ + smmap==5.0.2
+
+ + streamlit==1.44.1
+
+ [2025-04-30 05:24:40.822672] + tenacity==9.1.2
+
+ + toml==0.10.2
+
+ + tornado==6.4.2
+
+ + typing-extensions==4.13.2
+
+ + tzdata==2025.2
+
+ + urllib3==2.4.0
+
+ [2025-04-30 05:24:40.822860] + watchdog==6.0.0
+
+[05:24:41] 🐍 Python dependencies were installed from /mount/src/kidscodequest/uv.lock using uv-sync.
+
+[05:24:41] 📦 WARN: More than one requirements file detected in the repository. Available options: uv-sync /mount/src/kidscodequest/uv.lock, poetry /mount/src/kidscodequest/pyproject.toml. Used: uv-sync with /mount/src/kidscodequest/uv.lock
+
+Check if streamlit is installed
+
+Streamlit is already installed
+
+[05:24:43] 📦 Processed dependencies!
+
+
+
+
+[05:24:48] ❗️ The service has encountered an error while checking the health of the Streamlit app: Get "http://localhost:8501/healthz": dial tcp 127.0.0.1:8501: connect: connection refused
