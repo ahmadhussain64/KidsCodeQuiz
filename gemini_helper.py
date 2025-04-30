@@ -8,29 +8,25 @@ def setup_gemini():
     Returns:
         bool: True if setup was successful, False otherwise
     """
-    # Check if API key is in session state
-    if 'GEMINI_API_KEY' not in st.session_state:
-        # We need to ask for the API key
-        st.sidebar.warning("Gemini AI Assistant needs an API key to function.")
-        st.session_state.GEMINI_API_KEY = st.sidebar.text_input(
-            "Enter your Google Gemini API key:",
-            type="password",
-            help="Get an API key from https://ai.google.dev/",
-            key="gemini_api_key_input"
-        )
-        
-    # If we have an API key, configure Gemini
-    if st.session_state.GEMINI_API_KEY:
+    import os
+    # Get API key from environment variable
+    api_key = os.environ.get('GEMINI_API_KEY')
+    
+    if api_key:
         try:
-            genai.configure(api_key=st.session_state.GEMINI_API_KEY)
-            # Create generation config
+            # Configure Gemini with the API key
+            genai.configure(api_key=api_key)
+            
+            # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
                 st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-pro')
             return True
         except Exception as e:
-            st.sidebar.error(f"Error setting up Gemini: {str(e)}")
+            st.error(f"Error setting up Gemini: {str(e)}")
             return False
-    return False
+    else:
+        st.error("Gemini API key not found. Please set the GEMINI_API_KEY environment variable.")
+        return False
 
 def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"):
     """
