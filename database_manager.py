@@ -11,6 +11,34 @@ class DatabaseManager:
         self._local = threading.local()
         self.initialize_database()
         
+    def _run_migrations(self, conn, cursor):
+        """
+        Handle database migrations for schema changes
+        
+        Args:
+            conn: SQLite connection
+            cursor: SQLite cursor
+        """
+        # Migration 1: Add is_admin column to users table if not exists
+        try:
+            cursor.execute("SELECT is_admin FROM users LIMIT 1")
+        except sqlite3.OperationalError:
+            print("Migration: Adding is_admin column to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+            conn.commit()
+            
+        # Migration 2: Set at least one admin user if none exists
+        cursor.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1")
+        admin_count = cursor.fetchone()[0]
+        if admin_count == 0:
+            cursor.execute("SELECT id FROM users LIMIT 1")
+            user = cursor.fetchone()
+            if user:
+                user_id = user[0]
+                print(f"Migration: Setting user ID {user_id} as admin because no admins exist")
+                cursor.execute("UPDATE users SET is_admin = 1 WHERE id = ?", (user_id,))
+                conn.commit()
+        
     def connect(self):
         """Connect to the database in a thread-safe way"""
         # Always create a new connection for each request to avoid threading issues
@@ -44,6 +72,9 @@ class DatabaseManager:
             last_login TIMESTAMP
         )
         ''')
+        
+        # Run database migrations - add columns that may be missing in older database versions
+        self._run_migrations(conn, cursor)
         
         # Create progress table
         cursor.execute('''
