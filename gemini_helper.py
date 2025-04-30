@@ -19,8 +19,8 @@ def setup_gemini():
             
             # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
-                # Using the most stable model version for consistent results
-                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.5-flash')
+                # Using gemini-1.5-pro which is widely available
+                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-1.5-pro')
             return True
         except Exception as e:
             print(f"Error setting up Gemini: {str(e)}")
@@ -45,8 +45,8 @@ def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIAL
                 "or ask a teacher for help with your Python question.")
     
     try:
-        # Build the prompt with the persona
-        prompt = f"{persona}\n\nYou are helping a child learn Python programming. Provide simple, friendly, and clear explanations.\n\nQuestion: {message}"
+        # Build the prompt with the persona and strong focus on Python programming
+        prompt = f"{persona}\n\nYou are helping a child learn Python programming. Provide simple, friendly, and clear explanations. If the question is not about Python or programming, gently redirect to Python topics by saying something like 'I'm here to help with Python programming. Let me teach you about Python instead...' and then teach a relevant Python concept for beginners.\n\nQuestion: {message}"
         
         # Generate response
         response = st.session_state.GEMINI_MODEL.generate_content(prompt)
