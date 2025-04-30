@@ -20,7 +20,7 @@ def setup_gemini():
             # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
                 # Using gemini-1.5-pro which is widely available
-                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
+                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-1.5-flash')
             return True
         except Exception as e:
             print(f"Error setting up Gemini: {str(e)}")
@@ -29,18 +29,17 @@ def setup_gemini():
         print("Gemini API key not found in environment variables.")
         return False
 
-def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"):
+def get_fallback_response(message):
     """
-    Generate a response from Google Gemini AI with fallback to rule-based responses
+    Get a fallback response when the API is not available
     
     Args:
         message (str): The user's message
-        persona (str): The persona for the AI
-    
+        
     Returns:
-        str: The generated response
+        str: A fallback response
     """
-    # Simple fallback responses when API is not available
+    # Simple response dictionary
     fallback_responses = {
         "hi": "Hello there! I'm your Python learning assistant. What would you like to learn about Python today?",
         "hello": "Hi! I'm here to help you learn Python. Would you like to know about variables, loops, or functions?",
@@ -54,24 +53,9 @@ def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIAL
         "if statement": "If statements in Python look like this: `if x > 5: print('x is more than 5')`. You can add `elif` and `else` for more conditions.",
         "list": "Python lists store multiple items: `fruits = ['apple', 'banana', 'cherry']`. Access items with: `fruits[0]` (gets 'apple'). Add items with: `fruits.append('orange')`.",
         "dictionary": "Python dictionaries store key-value pairs: `student = {'name': 'John', 'age': 10}`. Access values with: `student['name']` (gets 'John').",
+        "pakistan": "I'm here to help with Python programming. Let me tell you about Python instead! Python is named after the comedy group Monty Python, not the snake. It was created in 1991 by Guido van Rossum and is designed to be easy to read and write."
     }
     
-    # Try to use the API first
-    if setup_gemini():
-        try:
-            # Build the prompt with the persona and strong focus on Python programming
-            prompt = f"{persona}\n\nYou are helping a child learn Python programming. Provide simple, friendly, and clear explanations. If the question is not about Python or programming, gently redirect to Python topics by saying something like 'I'm here to help with Python programming. Let me teach you about Python instead...' and then teach a relevant Python concept for beginners.\n\nQuestion: {message}"
-            
-            # Generate response
-            response = st.session_state.GEMINI_MODEL.generate_content(prompt)
-            
-            # Return the text
-            return response.text
-        except Exception as e:
-            print(f"Error generating response with API: {str(e)}")
-            # Fall through to rule-based fallback
-    
-    # Rule-based fallback when API is not available
     message_lower = message.lower().strip()
     
     # Look for exact matches first
@@ -85,6 +69,39 @@ def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIAL
     
     # Default response if no matches
     return ("I'm here to help you learn Python programming! Try asking about variables, loops, functions, or other Python concepts. For example, try 'How do I create a variable in Python?' or 'What is a for loop?'")
+
+
+def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"):
+    """
+    Generate a response from Google Gemini AI
+    
+    Args:
+        message (str): The user's message
+        persona (str): The persona for the AI
+    
+    Returns:
+        str: The generated response
+    """
+    # Check if API is configured
+    api_available = setup_gemini()
+    
+    if not api_available:
+        print("API not available, using fallback response system")
+        return get_fallback_response(message)
+    
+    try:
+        # Build the prompt with the persona and strong focus on Python programming
+        prompt = f"{persona}\n\nYou are helping a child learn Python programming. Provide simple, friendly, and clear explanations. If the question is not about Python or programming, gently redirect to Python topics by saying something like 'I'm here to help with Python programming. Let me teach you about Python instead...' and then teach a relevant Python concept for beginners.\n\nQuestion: {message}"
+        
+        # Generate response
+        response = st.session_state.GEMINI_MODEL.generate_content(prompt)
+        
+        # Return the text
+        return response.text
+    except Exception as e:
+        print(f"Error generating response: {str(e)}")
+        # If API call fails, use our fallback system
+        return get_fallback_response(message)
 
 def display_chatbot(container):
     """
