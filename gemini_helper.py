@@ -10,7 +10,7 @@ def setup_gemini():
     """
     import os
     # Get API key from environment variable
-    api_key = os.environ.get('AIzaSyDDEsUWzoaFdK-LgyVfJ-xWM5F_IzHq1hQ')
+    api_key = os.environ.get('GEMINI_API_KEY')
     
     if api_key:
         try:
