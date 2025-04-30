@@ -19,7 +19,7 @@ def setup_gemini():
             
             # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
-                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-pro')
+                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
             return True
         except Exception as e:
             st.error(f"Error setting up Gemini: {str(e)}")
