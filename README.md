@@ -43,8 +43,8 @@ The application is organized into several modules:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/ahmadhussain64/kidscodequest.git
-   cd kidscodequest
+   git clone https://github.com/ahmadhussain64/kidscodeqiz.git
+   cd kidscodequiz
    ```
 
 2. Install the required packages:
