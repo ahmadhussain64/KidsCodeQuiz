@@ -75,7 +75,7 @@ def display_chatbot(container):
     # Submit button
     if container.button("Ask") and message:
         # Display thinking message
-        with container.spinner("Thinking..."):
+        with st.spinner("Thinking..."):
             # Set education specialist persona
             persona = "YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"
             
@@ -107,4 +107,4 @@ def display_chatbot(container):
     if "chat_history" in st.session_state and st.session_state.chat_history:
         if container.button("Clear Chat"):
             st.session_state.chat_history = []
-            container.rerun()
+            st.rerun()
