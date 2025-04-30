@@ -102,7 +102,7 @@ Follow these steps to deploy your application on Streamlit.io (Streamlit Communi
    
    Note: You can rename the `streamlit_requirements.txt` file to `requirements.txt` before uploading to GitHub.
 
-### Deployment Steps
+#### Deployment Steps
 
 1. Go to [Streamlit Community Cloud](https://share.streamlit.io/) and log in with your GitHub account
 
@@ -118,7 +118,7 @@ Follow these steps to deploy your application on Streamlit.io (Streamlit Communi
 
 5. Your app will be available at a URL like: `https://kidscodequest-[random-string].streamlit.app`
 
-### Important Notes
+#### Important Notes for Streamlit Deployment
 
 1. **Database Storage**:
    - The SQLite database will start fresh on Streamlit.io
@@ -133,3 +133,71 @@ Follow these steps to deploy your application on Streamlit.io (Streamlit Communi
    - If deployment fails, check the logs in Streamlit Cloud
    - Make sure all dependencies are listed in `requirements.txt`
    - Verify that `.streamlit/config.toml` has the correct server settings
+
+### Option B: Vercel Deployment
+
+Vercel offers free hosting for Python applications and can be used as an alternative deployment option.
+
+#### Preparation Steps
+
+1. Install Node.js if you don't already have it: [Download Node.js](https://nodejs.org/)
+
+2. Install the Vercel CLI:
+   ```
+   npm install -g vercel
+   ```
+
+3. Create a file named `vercel.json` in your repository with the following content:
+   ```json
+   {
+     "version": 2,
+     "builds": [{ "src": "*.py", "use": "@liudonghua123/now-flask" }],
+     "routes": [{ "src": "(.*)", "dest": "app.py" }]
+   }
+   ```
+
+4. Make sure you have a `requirements.txt` file with all dependencies:
+   ```
+   streamlit>=1.44.1
+   pillow>=11.2.1
+   pandas>=2.0.0
+   ```
+
+#### Deployment Steps
+
+1. Open a terminal/command prompt in your project directory
+
+2. Log in to Vercel (if you haven't already):
+   ```
+   vercel login
+   ```
+
+3. Deploy your application:
+   ```
+   vercel
+   ```
+   Follow the prompts to link your project
+
+4. For production deployment:
+   ```
+   vercel --prod
+   ```
+
+5. Your app will be deployed to a URL like: `https://kidscodequiz.vercel.app`
+
+#### Important Notes for Vercel Deployment
+
+1. **Limitations**:
+   - Limited to 12 free deployments per day
+   - Complex Streamlit apps may require additional configuration
+   - Some features might need adjustment to work with Vercel's serverless model
+
+2. **Advantages**:
+   - Fast deployments
+   - Custom domains
+   - Integrated with Git for automatic updates
+
+3. **Troubleshooting**:
+   - Check deployment logs with `vercel logs`
+   - Review the build configuration in `vercel.json`
+   - Make sure all dependencies are correctly listed in `requirements.txt`
