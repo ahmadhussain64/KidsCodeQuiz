@@ -20,7 +20,7 @@ def setup_gemini():
             # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
                 # Using gemini-1.5-pro which is widely available
-                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-1.5-pro')
+                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
             return True
         except Exception as e:
             print(f"Error setting up Gemini: {str(e)}")
@@ -31,7 +31,7 @@ def setup_gemini():
 
 def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIALIST"):
     """
-    Generate a response from Google Gemini AI
+    Generate a response from Google Gemini AI with fallback to rule-based responses
     
     Args:
         message (str): The user's message
@@ -40,23 +40,51 @@ def generate_response(message, persona="YOU ARE A PROFESSIONAL EDUCATION SPECIAL
     Returns:
         str: The generated response
     """
-    if not setup_gemini():
-        return ("I'm currently offline due to a connection issue. Please try again later, "
-                "or ask a teacher for help with your Python question.")
+    # Simple fallback responses when API is not available
+    fallback_responses = {
+        "hi": "Hello there! I'm your Python learning assistant. What would you like to learn about Python today?",
+        "hello": "Hi! I'm here to help you learn Python. Would you like to know about variables, loops, or functions?",
+        "how are you": "I'm doing great! Ready to help you learn Python. What Python topic are you interested in?",
+        "what is python": "Python is a popular programming language that's easy to learn! It's used for web development, data analysis, AI, and more. Would you like to learn some basic Python commands?",
+        "help": "I can help you learn Python! Try asking about 'variables', 'loops', 'functions', or 'how to print in Python'.",
+        "variables": "In Python, variables store data. For example: `name = 'Alex'` creates a variable called 'name' with the value 'Alex'. You can then use this variable in your code!",
+        "loops": "Python has two main types of loops: 'for' loops and 'while' loops. A simple for loop looks like this: `for i in range(5): print(i)`. This will print numbers from 0 to 4.",
+        "functions": "Functions in Python let you reuse code. Example: `def greet(name): return 'Hello, ' + name`. You can then call it with `greet('Sam')` which returns 'Hello, Sam'.",
+        "print": "To display text in Python, use the print() function: `print('Hello, world!')`. This will output: Hello, world!",
+        "if statement": "If statements in Python look like this: `if x > 5: print('x is more than 5')`. You can add `elif` and `else` for more conditions.",
+        "list": "Python lists store multiple items: `fruits = ['apple', 'banana', 'cherry']`. Access items with: `fruits[0]` (gets 'apple'). Add items with: `fruits.append('orange')`.",
+        "dictionary": "Python dictionaries store key-value pairs: `student = {'name': 'John', 'age': 10}`. Access values with: `student['name']` (gets 'John').",
+    }
     
-    try:
-        # Build the prompt with the persona and strong focus on Python programming
-        prompt = f"{persona}\n\nYou are helping a child learn Python programming. Provide simple, friendly, and clear explanations. If the question is not about Python or programming, gently redirect to Python topics by saying something like 'I'm here to help with Python programming. Let me teach you about Python instead...' and then teach a relevant Python concept for beginners.\n\nQuestion: {message}"
-        
-        # Generate response
-        response = st.session_state.GEMINI_MODEL.generate_content(prompt)
-        
-        # Return the text
-        return response.text
-    except Exception as e:
-        print(f"Error generating response: {str(e)}")
-        return ("Sorry, I couldn't generate a response at the moment. "
-                "Try asking a different question or simplifying your current question.")
+    # Try to use the API first
+    if setup_gemini():
+        try:
+            # Build the prompt with the persona and strong focus on Python programming
+            prompt = f"{persona}\n\nYou are helping a child learn Python programming. Provide simple, friendly, and clear explanations. If the question is not about Python or programming, gently redirect to Python topics by saying something like 'I'm here to help with Python programming. Let me teach you about Python instead...' and then teach a relevant Python concept for beginners.\n\nQuestion: {message}"
+            
+            # Generate response
+            response = st.session_state.GEMINI_MODEL.generate_content(prompt)
+            
+            # Return the text
+            return response.text
+        except Exception as e:
+            print(f"Error generating response with API: {str(e)}")
+            # Fall through to rule-based fallback
+    
+    # Rule-based fallback when API is not available
+    message_lower = message.lower().strip()
+    
+    # Look for exact matches first
+    if message_lower in fallback_responses:
+        return fallback_responses[message_lower]
+    
+    # Look for partial matches
+    for key in fallback_responses:
+        if key in message_lower:
+            return fallback_responses[key]
+    
+    # Default response if no matches
+    return ("I'm here to help you learn Python programming! Try asking about variables, loops, functions, or other Python concepts. For example, try 'How do I create a variable in Python?' or 'What is a for loop?'")
 
 def display_chatbot(container):
     """
