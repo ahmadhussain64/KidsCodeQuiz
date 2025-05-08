@@ -10,7 +10,7 @@ def setup_gemini():
     """
     import os
     # Get API key from environment variable
-    api_key = os.environ.get('GEMINI_API_KEY')
+    api_key = os.environ.get('AIzaSyC5Sp6ZIcOl1D805ZavGZ5N8na1D52qFkQ')
     
     if api_key:
         try:
@@ -19,8 +19,8 @@ def setup_gemini():
             
             # Create generation config if not already created
             if 'GEMINI_MODEL' not in st.session_state:
-                # Using gemini-1.5-pro which is widely available
-                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-1.5-flash')
+                # Using gemini-2.0-flash which is widely available
+                st.session_state.GEMINI_MODEL = genai.GenerativeModel('gemini-2.0-flash')
             return True
         except Exception as e:
             print(f"Error setting up Gemini: {str(e)}")
