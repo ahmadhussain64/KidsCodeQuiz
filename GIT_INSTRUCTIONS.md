@@ -72,7 +72,7 @@ Follow these steps to upload this project to your GitHub repository:
    - Choose public or private
    - Click "Publish Repository"
 
-Your project should now be available at https://github.com/ahmadhussain64/kidscodequiz
+Your project should now be available at https://github.com/ahmadhussain64/kidscodequiz.git
 
 ## Part 2: Deployment Options
 
